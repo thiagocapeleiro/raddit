@@ -1,5 +1,7 @@
 class LinksController < ApplicationController
   before_action :set_link, only: [:show, :edit, :update, :destroy]
+  before_filter :authenticate_user!, :except => [:index, :show]
+  before_action :authorized_user, only: [:edit, :update, :destroy]
 
   # GET /links
   # GET /links.json
@@ -7,6 +9,10 @@ class LinksController < ApplicationController
     @links = Link.all
   end
 
+  def authorized_user
+    @link = current_user.links.find_by(id: params[:id])
+    redirect_to links_path, notice: "Not authorized to edit this link" if @link.nil?
+  end
   # GET /links/1
   # GET /links/1.json
   def show
@@ -14,7 +20,7 @@ class LinksController < ApplicationController
 
   # GET /links/new
   def new
-    @link = Link.new
+    @link = current_user.links.build
   end
 
   # GET /links/1/edit
@@ -24,7 +30,7 @@ class LinksController < ApplicationController
   # POST /links
   # POST /links.json
   def create
-    @link = Link.new(link_params)
+    @link = current_user.build(link_params)
 
     respond_to do |format|
       if @link.save
